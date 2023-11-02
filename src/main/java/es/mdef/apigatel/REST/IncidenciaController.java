@@ -195,6 +195,33 @@ public class IncidenciaController {
 		Perfil rol = Perfil.valueOf(rolesUsuario.iterator().next().toString());
 		if (rol.equals(Perfil.RESOLUTOR)) {
 
+			IncidenciaConId incidencia = repositorio.findById(id).map(inc -> {
+				inc.setDetalles(inc.getDetalles() + " \n ---- " + inc.getAgenteResolutor().getNombre() + " "
+						+ inc.getAgenteResolutor().getApellidos() + LocalDate.now()	+ "---- \n" + model.getDetalles());
+				
+				if (inc.getTipoIncidencia() == TipoIncidencia.AVERIA) {
+					((AveriaAPI) inc).setReparable(model.getReparable());
+				} else if (inc.getTipoIncidencia() == TipoIncidencia.EXTRAVIO) {
+					((ExtravioAPI) inc).setUltimaUbicacion(model.getUltimaUbicacion());
+					((ExtravioAPI) inc).setBloqueado(model.isBloqueado());
+					((ExtravioAPI) inc).setBorrado(model.isBorrado());
+					((ExtravioAPI) inc).setEncontrado(model.isEncontrado());
+				} else if (inc.getTipoIncidencia() == TipoIncidencia.CONFIGURACION) {
+					((ConfiguracionAPI) inc).setAplicacion(model.getAplicacion());
+				}else if (inc.getTipoIncidencia() == TipoIncidencia.SOLICITUD) {
+					((SolicitudAPI) inc).setAceptado(model.isAceptado());
+				}
+				
+				return repositorio.save(inc);
+			})
+			.orElseThrow(() -> new RegisterNotFoundException(id, "incidencia"));
+			log.info("Actualizada " + incidencia);
+			return assembler.toModel(incidencia);
+			
+			
+			
+			
+			
 			IncidenciaConId incidencia = repositorio.findById(id)
 					.orElseThrow(() -> new RegisterNotFoundException(id, "incicencia"));
 
